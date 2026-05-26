@@ -24,24 +24,8 @@ class ShoppingProvider with ChangeNotifier {
   Future<void> _initHive() async {
     _shoppingBox = await Hive.openBox<ShoppingList>('shoppingLists');
     _completedBox = await Hive.openBox<ShoppingList>('completedLists');
-    _shoppingLists = _shoppingBox.values
-        .map((list) => ShoppingList(
-              id: list.id,
-              name: list.name,
-              items: List<ShoppingItem>.from(list.items),
-              isCompleted: list.isCompleted,
-              completedAt: list.completedAt,
-            ))
-        .toList();
-    _completedLists = _completedBox.values
-        .map((list) => ShoppingList(
-              id: list.id,
-              name: list.name,
-              items: List<ShoppingItem>.from(list.items),
-              isCompleted: list.isCompleted,
-              completedAt: list.completedAt,
-            ))
-        .toList();
+    _shoppingLists = _shoppingBox.values.toList();
+    _completedLists = _completedBox.values.toList();
     if (_shoppingLists.isNotEmpty) {
       _currentList = _shoppingLists.first;
     }
@@ -52,38 +36,10 @@ class ShoppingProvider with ChangeNotifier {
     await _shoppingBox.clear();
     await _completedBox.clear();
     for (var list in _shoppingLists) {
-      final copy = ShoppingList(
-        id: list.id,
-        name: list.name,
-        items: list.items.map((item) => ShoppingItem(
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          category: item.category,
-          isCompleted: item.isCompleted,
-        )).toList(),
-        isCompleted: list.isCompleted,
-        completedAt: list.completedAt,
-      );
-      await _shoppingBox.add(copy);
+      await _shoppingBox.put(list.id, list);
     }
     for (var list in _completedLists) {
-      final copy = ShoppingList(
-        id: list.id,
-        name: list.name,
-        items: list.items.map((item) => ShoppingItem(
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          quantity: item.quantity,
-          category: item.category,
-          isCompleted: item.isCompleted,
-        )).toList(),
-        isCompleted: list.isCompleted,
-        completedAt: list.completedAt,
-      );
-      await _completedBox.add(copy);
+      await _completedBox.put(list.id, list);
     }
   }
 
@@ -98,10 +54,6 @@ class ShoppingProvider with ChangeNotifier {
     _currentList = newList;
     _saveLists();
     notifyListeners();
-    // Show interstitial ad if more than 3 lists have been created
-    if (_shoppingLists.length > 3) {
-      AdManager().showInterstitialAd();
-    }
   }
 
   // Seleccionar lista actual

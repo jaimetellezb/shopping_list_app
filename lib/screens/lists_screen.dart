@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../providers/shopping_provider.dart';
 import '../widgets/create_list_dialog.dart';
-import '../ads/ad_manager.dart';
 
 class ListsScreen extends StatefulWidget {
   const ListsScreen({super.key});
@@ -13,177 +11,247 @@ class ListsScreen extends StatefulWidget {
 }
 
 class _ListsScreenState extends State<ListsScreen> {
-  BannerAd? _bannerAd;
-
-  @override
-  void initState() {
-    super.initState();
-    _bannerAd = BannerAd(
-      adUnitId: AdManager.bannerAdUnitId,
-      size: AdSize.banner,
-      request: AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (ad) => setState(() {}),
-        onAdFailedToLoad: (ad, error) {
-          ad.dispose();
-        },
-      ),
-    )..load();
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final double bannerHeight = _bannerAd?.size.height.toDouble() ?? 0;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Mis Listas de Compras'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: Stack(
-        children: [
-          Consumer<ShoppingProvider>(
-            builder: (context, provider, child) {
-              if (provider.shoppingLists.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey),
-                      SizedBox(height: 16),
-                      Text(
-                        'No tienes listas de compras',
-                        style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                      ),
-                      SizedBox(height: 16),
-                      ElevatedButton.icon(
-                        onPressed: () => _showCreateListDialog(context),
-                        icon: Icon(Icons.add),
-                        label: Text('Crear primera lista'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+    final colorScheme = Theme.of(context).colorScheme;
 
-              return ListView.builder(
-                padding: EdgeInsets.only(
-                  left: 16,
-                  right: 16,
-                  bottom: bannerHeight + 24, // espacio para el banner y margen
-                ),
-                itemCount: provider.shoppingLists.length,
-                itemBuilder: (context, index) {
-                  final list = provider.shoppingLists[index];
-                  return Card(
-                    margin: EdgeInsets.only(bottom: 12),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.green,
-                        child: Icon(Icons.shopping_cart, color: Colors.white),
-                      ),
-                      title: Text(list.name, style: TextStyle(fontWeight: FontWeight.bold)),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('${list.totalItems} productos'),
-                          Text('\$${list.totalAmount.toStringAsFixed(2)}',
-                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                      trailing: PopupMenuButton(
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'select',
-                            child: Row(
-                              children: [
-                                Icon(Icons.check_circle, color: Colors.green),
-                                SizedBox(width: 8),
-                                Text('Seleccionar'),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text('Eliminar'),
-                              ],
-                            ),
-                          ),
-                        ],
-                        onSelected: (value) {
-                          if (value == 'select') {
-                            provider.selectList(list);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Lista "${list.name}" seleccionada')),
-                            );
-                          } else if (value == 'delete') {
-                            _showDeleteDialog(context, provider, list.id, list.name);
-                          }
-                        },
-                      ),
-                      onTap: () {
-                        provider.selectList(list);
-                        Navigator.of(context).pushNamed('/shopping');
-                      },
+    return Consumer<ShoppingProvider>(
+      builder: (context, provider, child) {
+        if (provider.shoppingLists.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
                     ),
-                  );
-                },
-              );
-            },
-          ),
-          if (_bannerAd != null)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Container(
-                color: Colors.white,
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
+                    child: Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 64,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'No tienes listas de compras',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Crea tu primera lista para empezar',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    onPressed: () => _showCreateListDialog(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Crear primera lista'),
+                  ),
+                ],
               ),
             ),
-        ],
-      ),
-      floatingActionButton: Padding(
-        padding: EdgeInsets.only(bottom: bannerHeight + 8),
-        child: FloatingActionButton(
-          onPressed: () => _showCreateListDialog(context),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          child: Icon(Icons.add),
-        ),
-      ),
+          );
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          itemCount: provider.shoppingLists.length,
+          itemBuilder: (context, index) {
+            final list = provider.shoppingLists[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.04),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () {
+                    provider.selectList(list);
+                    Navigator.of(context).pushNamed('/shopping');
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Icon(
+                            Icons.shopping_bag_rounded,
+                            color: colorScheme.primary,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                list.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '${list.totalItems} productos',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              '\$${list.totalAmount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.secondary.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                '${list.completedItemsCount}/${list.totalItems}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  color: colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(width: 8),
+                        PopupMenuButton(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: Colors.grey.shade400,
+                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'select',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  const Text('Seleccionar'),
+                                ],
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    color: Colors.red.shade400,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Eliminar',
+                                    style: TextStyle(
+                                      color: Colors.red.shade400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) {
+                            if (value == 'select') {
+                              provider.selectList(list);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Lista "${list.name}" seleccionada',
+                                  ),
+                                ),
+                              );
+                            } else if (value == 'delete') {
+                              _showDeleteDialog(
+                                context,
+                                provider,
+                                list.id,
+                                list.name,
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
   void _showCreateListDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => CreateListDialog(),
-    );
+    showDialog(context: context, builder: (context) => CreateListDialog());
   }
 
-  void _showDeleteDialog(BuildContext context, ShoppingProvider provider, String listId, String listName) {
+  void _showDeleteDialog(
+    BuildContext context,
+    ShoppingProvider provider,
+    String listId,
+    String listName,
+  ) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Eliminar Lista'),
-        content: Text('¿Estás seguro de que quieres eliminar la lista "$listName"?'),
+        content: Text(
+          '¿Estás seguro de que quieres eliminar la lista "$listName"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),

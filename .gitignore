@@ -69,6 +69,19 @@ web/generated/
 *.DS_Store
 .idea/
 
+# Firebase
+android/app/google-services.json
+lib/firebase_options.dart
+ios/Runner/GoogleService-Info.plist
+
+# Secrets (AdMob real IDs)
+lib/secrets.dart
+
+# Keystore
+*.jks
+*.keystore
+key.properties
+
 # Hive boxes
 *.hive
 *.hive.lock
