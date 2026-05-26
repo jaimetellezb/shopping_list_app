@@ -80,7 +80,7 @@ Nos reservamos el derecho de actualizar esta política. Los cambios se publicar�
 
 Si tienes preguntas sobre esta política, puedes contactarnos en:
 
-**Correo electrónico:** [tu-email@ejemplo.com]
+**Correo electrónico:** support@jaimetellezb.com
 
 ---
 
