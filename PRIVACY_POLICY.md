@@ -4,7 +4,7 @@
 
 ## Introducción
 
-Esta política de privacidad describe cómo se recopilan, utilizan y protegen los datos personales de los usuarios de la aplicación **Lista de Compras** (en adelante, "la Aplicación").
+Esta política de privacidad describe cómo se recopilan, utilizan y protegen los datos personales de los usuarios de la aplicación **La Compra** (en adelante, "la Aplicación").
 
 Al utilizar la Aplicación, aceptas los términos de esta política.
 
