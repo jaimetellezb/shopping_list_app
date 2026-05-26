@@ -5,7 +5,7 @@
         android:label="La Compra"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:enableEdgeToEdge="true">
+>
         <activity
             android:name=".MainActivity"
             android:exported="true"
