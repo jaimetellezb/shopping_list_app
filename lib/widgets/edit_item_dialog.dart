@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/shopping_provider.dart';
-import '../models/shopping_item.dart';
+import '../db/shopping_item.dart';
 
 class EditItemDialog extends StatefulWidget {
   final ShoppingItem item;
@@ -216,6 +216,7 @@ class _EditItemDialogState extends State<EditItemDialog> {
 
   void _showNewCategoryDialog() {
     final categoryController = TextEditingController();
+    final provider = Provider.of<ShoppingProvider>(context, listen: false);
 
     showDialog(
       context: context,
@@ -252,9 +253,11 @@ class _EditItemDialogState extends State<EditItemDialog> {
                   const SizedBox(width: 8),
                   ElevatedButton(
                     onPressed: () {
-                      if (categoryController.text.trim().isNotEmpty) {
+                      final newCategory = categoryController.text.trim();
+                      if (newCategory.isNotEmpty) {
+                        provider.addCategory(newCategory);
                         setState(() {
-                          _selectedCategory = categoryController.text.trim();
+                          _selectedCategory = newCategory;
                         });
                         Navigator.of(context).pop();
                       }

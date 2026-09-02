@@ -239,16 +239,7 @@ class _AddItemDialogState extends State<AddItemDialog> {
                     onPressed: () {
                       final newCategory = categoryController.text.trim();
                       if (newCategory.isNotEmpty) {
-                        if (!provider.getCategories().contains(newCategory)) {
-                          provider.addItem(
-                            '_temp_',
-                            0.01,
-                            category: newCategory,
-                          );
-                          provider.removeItem(
-                            provider.currentList!.items.last.id,
-                          );
-                        }
+                        provider.addCategory(newCategory);
                         setState(() {
                           _selectedCategory = newCategory;
                         });
