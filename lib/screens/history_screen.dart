@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../db/shopping_list.dart';
 import '../providers/shopping_provider.dart';
 import 'package:intl/intl.dart';
 
@@ -223,6 +225,37 @@ class HistoryScreenState extends State<HistoryScreen> {
                         ),
                       );
                     }),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton.icon(
+                          onPressed:
+                              () => _copySummary(context, list, dateLabel),
+                          icon: const Icon(Icons.copy_rounded, size: 18),
+                          label: const Text('Copiar'),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final copy = await provider.duplicateList(list.id);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    copy == null
+                                        ? 'No se pudo duplicar la lista'
+                                        : 'Lista "${copy.name}" creada',
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          icon: const Icon(Icons.copy_all_rounded, size: 18),
+                          label: const Text('Repetir compra'),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -230,6 +263,26 @@ class HistoryScreenState extends State<HistoryScreen> {
           },
         );
       },
+    );
+  }
+
+  void _copySummary(
+    BuildContext context,
+    ShoppingList list,
+    String dateLabel,
+  ) {
+    final buffer = StringBuffer()..writeln('${list.name} • $dateLabel');
+    for (final item in list.items) {
+      buffer.writeln(
+        '- ${item.quantity} x ${item.name} '
+        '(\$${item.price.toStringAsFixed(2)}) = '
+        '\$${item.totalPrice.toStringAsFixed(2)}',
+      );
+    }
+    buffer.write('Total: \$${list.totalAmount.toStringAsFixed(2)}');
+    Clipboard.setData(ClipboardData(text: buffer.toString()));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Resumen copiado al portapapeles')),
     );
   }
 

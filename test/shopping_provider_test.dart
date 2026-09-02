@@ -148,6 +148,59 @@ void main() {
     expect(provider.currentList!.items.last.id, removed.id);
   });
 
+  test('duplicateList copia activa o del historial con IDs nuevos', () async {
+    final provider = await newProvider();
+    await provider.createNewList('Super');
+    await provider.addItem('Leche', 2.0, quantity: 2, category: 'Lácteos');
+    final originalId = provider.currentList!.id;
+    final originalItemId = provider.currentList!.items.first.id;
+
+    final copy = await provider.duplicateList(originalId);
+    expect(copy, isNotNull);
+    expect(copy!.id == originalId, false);
+    expect(copy.name, 'Super (copia)');
+    expect(copy.items, hasLength(1));
+    expect(copy.items.first.id == originalItemId, false);
+    expect(copy.items.first.isCompleted, false);
+    expect(provider.currentList!.id, copy.id);
+
+    // Duplicar inexistente devuelve null.
+    expect(await provider.duplicateList('no-existe'), isNull);
+
+    // Duplicar desde el historial también funciona.
+    provider.selectList(copy);
+    await provider.completeShoppingList();
+    final copy2 = await provider.duplicateList(copy.id);
+    expect(copy2, isNotNull);
+    expect(provider.shoppingLists, hasLength(2));
+  });
+
+  test('presupuesto por lista con persistencia y limpieza', () async {
+    final provider = await newProvider();
+    await provider.createNewList('Super');
+    final listId = provider.currentList!.id;
+
+    expect(provider.getBudget(listId), isNull);
+    await provider.setBudget(listId, 100);
+    expect(provider.getBudget(listId), 100);
+
+    await provider.setBudget(listId, -5);
+    expect(provider.getBudget(listId), isNull);
+
+    await provider.setBudget(listId, 50);
+    await Hive.close();
+    Hive.init(tempDir.path);
+    final reopened = await newProvider();
+    expect(reopened.getBudget(listId), 50);
+
+    // Completar limpia el presupuesto de la lista archivada.
+    reopened.selectList(
+      reopened.shoppingLists.firstWhere((l) => l.id == listId),
+    );
+    await reopened.completeShoppingList();
+    expect(reopened.getBudget(listId), isNull);
+  });
+
   test('completeShoppingList mueve al historial y limpia la actual', () async {
     final provider = await newProvider();
     await provider.createNewList('Super');

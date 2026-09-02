@@ -178,6 +178,43 @@ class ShoppingListScreenState extends State<ShoppingListScreen> {
                                 color: Colors.white,
                               ),
                             ),
+                            Builder(
+                              builder: (context) {
+                                final budget = provider.getBudget(
+                                  currentList.id,
+                                );
+                                if (budget == null) {
+                                  return const SizedBox.shrink();
+                                }
+                                final remaining = budget - currentList.totalAmount;
+                                final over = remaining < 0;
+                                return Padding(
+                                  padding: const EdgeInsets.only(top: 4),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        over
+                                            ? Icons.warning_rounded
+                                            : Icons.savings_outlined,
+                                        color: Colors.white70,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        over
+                                            ? 'Excede el presupuesto (\$${budget.toStringAsFixed(2)})'
+                                            : 'Te quedan \$${remaining.toStringAsFixed(2)} de \$${budget.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
                           ],
                         ),
                       ),
