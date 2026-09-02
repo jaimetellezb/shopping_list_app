@@ -211,6 +211,17 @@ class ShoppingProvider with ChangeNotifier {
     await _persistActiveList(_currentList!);
   }
 
+  // Restaurar un producto eliminado en su posición (para Deshacer).
+  Future<void> restoreItem(ShoppingItem item, int index) async {
+    if (!_ready || _currentList == null) return;
+    _ensureMutableItems(_currentList!);
+    if (_currentList!.items.any((e) => e.id == item.id)) return;
+    final safeIndex = index.clamp(0, _currentList!.items.length);
+    _currentList!.items.insert(safeIndex, item);
+    notifyListeners();
+    await _persistActiveList(_currentList!);
+  }
+
   // Marcar producto como completado
   Future<void> toggleItemCompletion(String itemId) async {
     if (!_ready || _currentList == null) return;
