@@ -65,6 +65,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
           itemBuilder: (context, index) {
             final list = provider.completedLists[index];
             final dateFormat = DateFormat('dd MMM yyyy • HH:mm');
+            final completedAt = list.completedAt;
+            final dateLabel =
+                completedAt != null
+                    ? dateFormat.format(completedAt)
+                    : 'Fecha no disponible';
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -119,7 +124,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          dateFormat.format(list.completedAt!),
+                          dateLabel,
                           style: TextStyle(
                             color: Colors.grey.shade600,
                             fontSize: 13,
@@ -128,35 +133,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ],
                     ),
                   ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '\$${list.totalAmount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: colorScheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${list.items.length} productos',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '\$${list.totalAmount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: colorScheme.primary,
+                            ),
                           ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              '${list.items.length} productos',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: Colors.grey.shade400,
+                          size: 20,
                         ),
+                        tooltip: 'Eliminar del historial',
+                        onPressed:
+                            () => _showDeleteDialog(
+                              context,
+                              provider,
+                              list.id,
+                              list.name,
+                            ),
                       ),
                     ],
                   ),
@@ -205,6 +230,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
           },
         );
       },
+    );
+  }
+
+  void _showDeleteDialog(
+    BuildContext context,
+    ShoppingProvider provider,
+    String listId,
+    String listName,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Eliminar del historial'),
+        content: Text(
+          '¿Eliminar "$listName" del historial? Esta acción no se puede deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              provider.deleteList(listId);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 }

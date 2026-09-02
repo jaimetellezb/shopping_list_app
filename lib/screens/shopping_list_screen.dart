@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../db/shopping_item.dart';
 import '../providers/shopping_provider.dart';
 import '../widgets/edit_item_dialog.dart';
 
@@ -412,7 +413,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
-  void _showEditItemDialog(BuildContext context, item) {
+  void _showEditItemDialog(BuildContext context, ShoppingItem item) {
     showDialog(
       context: context,
       builder: (context) => EditItemDialog(item: item),

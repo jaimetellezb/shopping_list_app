@@ -1,4 +1,4 @@
-import 'dart:collection';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../db/shopping_item.dart';
@@ -9,51 +9,116 @@ class ShoppingProvider with ChangeNotifier {
   List<ShoppingList> _shoppingLists = [];
   List<ShoppingList> _completedLists = [];
   ShoppingList? _currentList;
+  Set<String> _customCategories = {};
+  bool _isInitialized = false;
+  bool _initFailed = false;
 
   late Box<ShoppingList> _shoppingBox;
   late Box<ShoppingList> _completedBox;
+  late Box<String> _categoriesBox;
 
   List<ShoppingList> get shoppingLists => _shoppingLists;
   List<ShoppingList> get completedLists => _completedLists;
   ShoppingList? get currentList => _currentList;
+  bool get isInitialized => _isInitialized;
+  bool get initFailed => _initFailed;
 
   ShoppingProvider() {
     _initHive();
   }
 
+  String _newId() {
+    return '${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(1 << 32)}';
+  }
+
   Future<void> _initHive() async {
-    _shoppingBox = await Hive.openBox<ShoppingList>('shoppingLists');
-    _completedBox = await Hive.openBox<ShoppingList>('completedLists');
-    _shoppingLists = _shoppingBox.values.toList();
-    _completedLists = _completedBox.values.toList();
-    if (_shoppingLists.isNotEmpty) {
-      _currentList = _shoppingLists.first;
+    try {
+      _shoppingBox = await Hive.openBox<ShoppingList>('shoppingLists');
+      _completedBox = await Hive.openBox<ShoppingList>('completedLists');
+      _categoriesBox = await Hive.openBox<String>('categories');
+      _shoppingLists = _shoppingBox.values.map(_withMutableItems).toList();
+      _completedLists = _completedBox.values.map(_withMutableItems).toList();
+      _customCategories = _categoriesBox.values
+          .map((c) => c.trim())
+          .where((c) => c.isNotEmpty)
+          .toSet();
+      if (_customCategories.isEmpty) {
+        // Migración: sembrar categorías existentes para no depender del
+        // escaneo de todas las listas en cada build.
+        final seeded = <String>{};
+        for (var list in [..._shoppingLists, ..._completedLists]) {
+          for (var item in list.items) {
+            final category = item.category.trim();
+            if (category.isNotEmpty && category != 'General') {
+              seeded.add(category);
+            }
+          }
+        }
+        for (var category in seeded) {
+          await _categoriesBox.add(category);
+        }
+        _customCategories = seeded;
+      }
+      if (_shoppingLists.isNotEmpty) {
+        _currentList = _shoppingLists.first;
+      }
+      _isInitialized = true;
+    } catch (e) {
+      debugPrint('ShoppingProvider: Hive init failed: $e');
+      _initFailed = true;
     }
     notifyListeners();
   }
 
-  Future<void> _saveLists() async {
-    await _shoppingBox.clear();
-    await _completedBox.clear();
-    for (var list in _shoppingLists) {
-      await _shoppingBox.put(list.id, list);
+  Future<void> retryInit() async {
+    if (_isInitialized || _initFailed == false) return;
+    _initFailed = false;
+    await _initHive();
+  }
+
+  static ShoppingList _withMutableItems(ShoppingList list) {
+    list.items = List<ShoppingItem>.from(list.items);
+    return list;
+  }
+
+  void _ensureMutableItems(ShoppingList list) {
+    // Las listas leídas de Hive o creadas con `const []` pueden ser
+    // inmutables; copiar antes de mutar evita UnsupportedError.
+    try {
+      list.items = List<ShoppingItem>.from(list.items);
+    } catch (_) {
+      list.items = <ShoppingItem>[];
     }
-    for (var list in _completedLists) {
-      await _completedBox.put(list.id, list);
+  }
+
+  bool get _ready => _isInitialized && !_initFailed;
+
+  Future<void> _persistActiveList(ShoppingList list) async {
+    try {
+      await _shoppingBox.put(list.id, list);
+    } catch (e) {
+      debugPrint('ShoppingProvider: persist active list failed: $e');
     }
   }
 
   // Crear nueva lista
-  void createNewList(String name) {
+  Future<void> createNewList(String name) async {
+    if (!_ready) return;
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return;
     final newList = ShoppingList(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
-      items: [], // Siempre mutable
+      id: _newId(),
+      name: trimmed,
+      items: <ShoppingItem>[],
     );
     _shoppingLists.add(newList);
     _currentList = newList;
-    _saveLists();
     notifyListeners();
+    try {
+      await _shoppingBox.put(newList.id, newList);
+    } catch (e) {
+      debugPrint('ShoppingProvider: create list persist failed: $e');
+    }
   }
 
   // Seleccionar lista actual
@@ -63,101 +128,180 @@ class ShoppingProvider with ChangeNotifier {
   }
 
   // Agregar producto a la lista actual
-  void addItem(String name, double price, {int quantity = 1, String category = 'General'}) {
-    if (_currentList == null) return;
+  Future<void> addItem(
+    String name,
+    double price, {
+    int quantity = 1,
+    String category = 'General',
+  }) async {
+    if (!_ready || _currentList == null) return;
+    final trimmedName = name.trim();
+    if (trimmedName.isEmpty || price <= 0 || quantity <= 0) return;
+    final trimmedCategory =
+        category.trim().isEmpty ? 'General' : category.trim();
+    _ensureMutableItems(_currentList!);
     final newItem = ShoppingItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      name: name,
+      id: _newId(),
+      name: trimmedName,
       price: price,
       quantity: quantity,
-      category: category,
+      category: trimmedCategory,
     );
-    // Asegura que la lista sea mutable
-    if (_currentList!.items is UnmodifiableListView) {
-      _currentList!.items = List<ShoppingItem>.from(_currentList!.items);
-    }
     _currentList!.items.add(newItem);
-    _saveLists();
+    if (trimmedCategory != 'General' &&
+        !_customCategories.contains(trimmedCategory)) {
+      _customCategories.add(trimmedCategory);
+      try {
+        await _categoriesBox.add(trimmedCategory);
+      } catch (e) {
+        debugPrint('ShoppingProvider: persist category failed: $e');
+      }
+    }
     notifyListeners();
+    await _persistActiveList(_currentList!);
   }
 
   // Editar producto
-  void editItem(String itemId, {String? name, double? price, int? quantity, String? category}) {
-    if (_currentList == null) return;
-    final itemIndex = _currentList!.items.indexWhere((item) => item.id == itemId);
-    if (itemIndex != -1) {
-      _currentList!.items[itemIndex] = _currentList!.items[itemIndex].copyWith(
-        name: name,
-        price: price,
-        quantity: quantity,
-        category: category,
-      );
-      _saveLists();
-      notifyListeners();
+  Future<void> editItem(
+    String itemId, {
+    String? name,
+    double? price,
+    int? quantity,
+    String? category,
+  }) async {
+    if (!_ready || _currentList == null) return;
+    final itemIndex = _currentList!.items.indexWhere(
+      (item) => item.id == itemId,
+    );
+    if (itemIndex == -1) return;
+    if (name != null && name.trim().isEmpty) return;
+    if (price != null && price <= 0) return;
+    if (quantity != null && quantity <= 0) return;
+    _ensureMutableItems(_currentList!);
+    final trimmedCategory = category?.trim();
+    _currentList!.items[itemIndex] = _currentList!.items[itemIndex].copyWith(
+      name: name?.trim(),
+      price: price,
+      quantity: quantity,
+      category:
+          trimmedCategory == null || trimmedCategory.isEmpty
+              ? null
+              : trimmedCategory,
+    );
+    final effectiveCategory = _currentList!.items[itemIndex].category;
+    if (effectiveCategory != 'General' &&
+        !_customCategories.contains(effectiveCategory)) {
+      _customCategories.add(effectiveCategory);
+      try {
+        await _categoriesBox.add(effectiveCategory);
+      } catch (e) {
+        debugPrint('ShoppingProvider: persist category failed: $e');
+      }
     }
+    notifyListeners();
+    await _persistActiveList(_currentList!);
   }
 
   // Eliminar producto
-  void removeItem(String itemId) {
-    if (_currentList == null) return;
+  Future<void> removeItem(String itemId) async {
+    if (!_ready || _currentList == null) return;
+    _ensureMutableItems(_currentList!);
     _currentList!.items.removeWhere((item) => item.id == itemId);
-    _saveLists();
     notifyListeners();
+    await _persistActiveList(_currentList!);
   }
 
   // Marcar producto como completado
-  void toggleItemCompletion(String itemId) {
-    if (_currentList == null) return;
-    final itemIndex = _currentList!.items.indexWhere((item) => item.id == itemId);
-    if (itemIndex != -1) {
-      _currentList!.items[itemIndex].isCompleted = 
-          !_currentList!.items[itemIndex].isCompleted;
-      _saveLists();
-      notifyListeners();
-    }
+  Future<void> toggleItemCompletion(String itemId) async {
+    if (!_ready || _currentList == null) return;
+    final itemIndex = _currentList!.items.indexWhere(
+      (item) => item.id == itemId,
+    );
+    if (itemIndex == -1) return;
+    _ensureMutableItems(_currentList!);
+    _currentList!.items[itemIndex].isCompleted =
+        !_currentList!.items[itemIndex].isCompleted;
+    notifyListeners();
+    await _persistActiveList(_currentList!);
   }
 
   // Completar lista de compras
-  void completeShoppingList() {
-    if (_currentList == null) return;
+  Future<void> completeShoppingList() async {
+    if (!_ready || _currentList == null) return;
+    final current = _currentList!;
     // Crear una copia profunda de la lista para evitar conflicto de HiveObject
     final completedList = ShoppingList(
-      id: _currentList!.id,
-      name: _currentList!.name,
-      items: _currentList!.items.map((item) => ShoppingItem(
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        category: item.category,
-        isCompleted: item.isCompleted,
-      )).toList(),
+      id: current.id,
+      name: current.name,
+      items:
+          current.items
+              .map(
+                (item) => ShoppingItem(
+                  id: item.id,
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                  category: item.category,
+                  isCompleted: item.isCompleted,
+                ),
+              )
+              .toList(),
       isCompleted: true,
       completedAt: DateTime.now(),
     );
     _completedLists.add(completedList);
-    _shoppingLists.remove(_currentList!);
+    _shoppingLists.removeWhere((list) => list.id == current.id);
     _currentList = null;
-    _saveLists();
     notifyListeners();
+    try {
+      await _shoppingBox.delete(current.id);
+      await _completedBox.put(completedList.id, completedList);
+    } catch (e) {
+      debugPrint('ShoppingProvider: complete list persist failed: $e');
+    }
     // Mostrar anuncio intersticial al completar una lista
     AdManager().showInterstitialAd();
   }
 
-  // Eliminar lista
-  void deleteList(String listId) {
+  // Eliminar lista (activa o del historial)
+  Future<void> deleteList(String listId) async {
+    if (!_ready) return;
     _shoppingLists.removeWhere((list) => list.id == listId);
     _completedLists.removeWhere((list) => list.id == listId);
     if (_currentList?.id == listId) {
       _currentList = null;
     }
-    _saveLists();
     notifyListeners();
+    try {
+      await _shoppingBox.delete(listId);
+      await _completedBox.delete(listId);
+    } catch (e) {
+      debugPrint('ShoppingProvider: delete list persist failed: $e');
+    }
+  }
+
+  // Registrar una categoría sin el hack del item temporal.
+  Future<void> addCategory(String name) async {
+    if (!_ready) return;
+    final trimmed = name.trim();
+    if (trimmed.isEmpty ||
+        trimmed == 'General' ||
+        _customCategories.contains(trimmed)) {
+      return;
+    }
+    _customCategories.add(trimmed);
+    notifyListeners();
+    try {
+      await _categoriesBox.add(trimmed);
+    } catch (e) {
+      debugPrint('ShoppingProvider: add category persist failed: $e');
+    }
   }
 
   // Obtener categorías únicas
   List<String> getCategories() {
-    Set<String> categories = {'General'};
+    final categories = <String>{'General', ..._customCategories};
+    // Incluir categorías legacy que aún no estén migradas.
     for (var list in _shoppingLists) {
       for (var item in list.items) {
         categories.add(item.category);
@@ -168,6 +312,8 @@ class ShoppingProvider with ChangeNotifier {
         categories.add(item.category);
       }
     }
-    return categories.toList();
+    final sorted = categories.toList()..sort();
+    sorted.remove('General');
+    return ['General', ...sorted];
   }
 }
