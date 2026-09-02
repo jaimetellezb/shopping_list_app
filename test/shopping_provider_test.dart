@@ -118,6 +118,36 @@ void main() {
     expect(provider.currentList!.items, isEmpty);
   });
 
+  test('restoreItem reinserta en su posición y evita duplicados', () async {
+    final provider = await newProvider();
+    await provider.createNewList('Super');
+    await provider.addItem('A', 1.0);
+    await provider.addItem('B', 2.0);
+    await provider.addItem('C', 3.0);
+    final removed = provider.currentList!.items[1];
+
+    await provider.removeItem(removed.id);
+    expect(
+      provider.currentList!.items.map((e) => e.name),
+      ['A', 'C'],
+    );
+
+    await provider.restoreItem(removed, 1);
+    expect(
+      provider.currentList!.items.map((e) => e.name),
+      ['A', 'B', 'C'],
+    );
+
+    // Restaurar dos veces no duplica.
+    await provider.restoreItem(removed, 1);
+    expect(provider.currentList!.items, hasLength(3));
+
+    // Índices fuera de rango se ajustan.
+    await provider.removeItem(removed.id);
+    await provider.restoreItem(removed, 99);
+    expect(provider.currentList!.items.last.id, removed.id);
+  });
+
   test('completeShoppingList mueve al historial y limpia la actual', () async {
     final provider = await newProvider();
     await provider.createNewList('Super');
