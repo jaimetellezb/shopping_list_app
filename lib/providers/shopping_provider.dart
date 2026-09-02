@@ -16,6 +16,7 @@ class ShoppingProvider with ChangeNotifier {
   late Box<ShoppingList> _shoppingBox;
   late Box<ShoppingList> _completedBox;
   late Box<String> _categoriesBox;
+  late Box<double> _budgetsBox;
 
   List<ShoppingList> get shoppingLists => _shoppingLists;
   List<ShoppingList> get completedLists => _completedLists;
@@ -36,6 +37,7 @@ class ShoppingProvider with ChangeNotifier {
       _shoppingBox = await Hive.openBox<ShoppingList>('shoppingLists');
       _completedBox = await Hive.openBox<ShoppingList>('completedLists');
       _categoriesBox = await Hive.openBox<String>('categories');
+      _budgetsBox = await Hive.openBox<double>('budgets');
       _shoppingLists = _shoppingBox.values.map(_withMutableItems).toList();
       _completedLists = _completedBox.values.map(_withMutableItems).toList();
       _customCategories = _categoriesBox.values
@@ -267,6 +269,7 @@ class ShoppingProvider with ChangeNotifier {
     try {
       await _shoppingBox.delete(current.id);
       await _completedBox.put(completedList.id, completedList);
+      await _budgetsBox.delete(current.id);
     } catch (e) {
       debugPrint('ShoppingProvider: complete list persist failed: $e');
     }
@@ -286,9 +289,68 @@ class ShoppingProvider with ChangeNotifier {
     try {
       await _shoppingBox.delete(listId);
       await _completedBox.delete(listId);
+      await _budgetsBox.delete(listId);
     } catch (e) {
       debugPrint('ShoppingProvider: delete list persist failed: $e');
     }
+  }
+
+  // Duplicar una lista (activa o del historial) como nueva lista activa.
+  Future<ShoppingList?> duplicateList(String listId) async {
+    if (!_ready) return null;
+    ShoppingList? source;
+    for (final list in [..._shoppingLists, ..._completedLists]) {
+      if (list.id == listId) {
+        source = list;
+        break;
+      }
+    }
+    if (source == null) return null;
+    final copy = ShoppingList(
+      id: _newId(),
+      name: '${source.name} (copia)',
+      items:
+          source.items
+              .map(
+                (item) => ShoppingItem(
+                  id: _newId(),
+                  name: item.name,
+                  price: item.price,
+                  quantity: item.quantity,
+                  category: item.category,
+                ),
+              )
+              .toList(),
+    );
+    _shoppingLists.add(copy);
+    _currentList = copy;
+    notifyListeners();
+    try {
+      await _shoppingBox.put(copy.id, copy);
+    } catch (e) {
+      debugPrint('ShoppingProvider: duplicate list persist failed: $e');
+    }
+    return copy;
+  }
+
+  // Presupuesto por lista (null = sin presupuesto).
+  double? getBudget(String listId) {
+    if (!_ready) return null;
+    return _budgetsBox.get(listId);
+  }
+
+  Future<void> setBudget(String listId, double? amount) async {
+    if (!_ready) return;
+    try {
+      if (amount == null || amount <= 0) {
+        await _budgetsBox.delete(listId);
+      } else {
+        await _budgetsBox.put(listId, amount);
+      }
+    } catch (e) {
+      debugPrint('ShoppingProvider: set budget persist failed: $e');
+    }
+    notifyListeners();
   }
 
   // Registrar una categoría sin el hack del item temporal.

@@ -277,6 +277,16 @@ class HomeScreenState extends State<HomeScreen> {
               builder: (context, provider, child) {
                 if (provider.currentList == null) return Container();
                 return IconButton(
+                  icon: const Icon(Icons.account_balance_wallet_outlined),
+                  onPressed: () => _showBudgetDialog(context, provider),
+                  tooltip: 'Presupuesto',
+                );
+              },
+            ),
+            Consumer<ShoppingProvider>(
+              builder: (context, provider, child) {
+                if (provider.currentList == null) return Container();
+                return IconButton(
                   icon: const Icon(Icons.check_circle_outline),
                   onPressed: () => _showCompleteDialog(context, provider),
                   tooltip: 'Completar compra',
@@ -417,6 +427,53 @@ class HomeScreenState extends State<HomeScreen> {
 
   void _showAddItemDialog(BuildContext context) {
     showDialog(context: context, builder: (context) => AddItemDialog());
+  }
+
+  void _showBudgetDialog(BuildContext context, ShoppingProvider provider) {
+    final list = provider.currentList;
+    if (list == null) return;
+    final controller = TextEditingController(
+      text: provider.getBudget(list.id)?.toStringAsFixed(2) ?? '',
+    );
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Presupuesto'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'Monto máximo',
+            prefixIcon: Icon(Icons.attach_money_rounded),
+            hintText: 'Ej: 150.00',
+          ),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              provider.setBudget(list.id, null);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Quitar', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              final amount = double.tryParse(controller.text.trim());
+              if (amount != null && amount > 0) {
+                provider.setBudget(list.id, amount);
+                Navigator.of(context).pop();
+              }
+            },
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCompleteDialog(BuildContext context, ShoppingProvider provider) {
