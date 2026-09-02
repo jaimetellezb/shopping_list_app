@@ -6,10 +6,10 @@ class CreateListDialog extends StatefulWidget {
   const CreateListDialog({super.key});
 
   @override
-  _CreateListDialogState createState() => _CreateListDialogState();
+  CreateListDialogState createState() => CreateListDialogState();
 }
 
-class _CreateListDialogState extends State<CreateListDialog> {
+class CreateListDialogState extends State<CreateListDialog> {
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 

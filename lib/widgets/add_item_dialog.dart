@@ -6,10 +6,10 @@ class AddItemDialog extends StatefulWidget {
   const AddItemDialog({super.key});
 
   @override
-  _AddItemDialogState createState() => _AddItemDialogState();
+  AddItemDialogState createState() => AddItemDialogState();
 }
 
-class _AddItemDialogState extends State<AddItemDialog> {
+class AddItemDialogState extends State<AddItemDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();

@@ -9,10 +9,10 @@ class ListsScreen extends StatefulWidget {
   const ListsScreen({super.key, this.onOpenList});
 
   @override
-  _ListsScreenState createState() => _ListsScreenState();
+  ListsScreenState createState() => ListsScreenState();
 }
 
-class _ListsScreenState extends State<ListsScreen> {
+class ListsScreenState extends State<ListsScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

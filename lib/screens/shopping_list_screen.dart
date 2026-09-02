@@ -8,10 +8,10 @@ class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
 
   @override
-  _ShoppingListScreenState createState() => _ShoppingListScreenState();
+  ShoppingListScreenState createState() => ShoppingListScreenState();
 }
 
-class _ShoppingListScreenState extends State<ShoppingListScreen> {
+class ShoppingListScreenState extends State<ShoppingListScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
