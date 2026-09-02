@@ -14,14 +14,11 @@ import 'ads/ad_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('🔥 main: WidgetsFlutterBinding initialized');
 
   try {
-    debugPrint('🔥 main: initializing Firebase...');
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-    debugPrint('🔥 main: Firebase initialized');
 
     FlutterError.onError = (errorDetails) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
@@ -30,24 +27,20 @@ void main() async {
       FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return true;
     };
-  } catch (e) {
-    debugPrint('🔥 main: Firebase initialization failed: $e');
+  } catch (_) {
+    // Sin Firebase (tests, plataformas sin google-services):
+    // la app sigue funcionando solo con almacenamiento local.
   }
 
-  debugPrint('🔥 main: initializing Hive...');
   await Hive.initFlutter();
   Hive.registerAdapter(ShoppingItemAdapter());
   Hive.registerAdapter(ShoppingListAdapter());
-  debugPrint('🔥 main: Hive ready');
 
-  debugPrint('🔥 main: firing AdManager().initialize() (non-blocking)...');
-  AdManager().initialize().catchError((e) {
-    debugPrint('🔥 main: Ad initialization error: $e');
-  });
+  // No bloquea el arranque: los anuncios se cargan en segundo plano
+  // tras el consentimiento UMP.
+  AdManager().initialize().catchError((_) {});
 
-  debugPrint('🔥 main: calling runApp()...');
   runApp(MyApp());
-  debugPrint('🔥 main: runApp() called — UI should be visible now');
 }
 
 class MyApp extends StatelessWidget {

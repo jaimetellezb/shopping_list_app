@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _appVersion = '';
+  bool _bannerRequested = false;
 
   late final List<Widget> _screens = [
     ListsScreen(onOpenList: _openShopping),
@@ -37,6 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadVersion();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_bannerRequested) {
+      _bannerRequested = true;
+      final width = MediaQuery.sizeOf(context).width.truncate();
+      AdManager().loadAnchoredAdaptiveBanner(width);
+    }
   }
 
   Future<void> _loadVersion() async {
@@ -176,16 +187,17 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: AdManager().isBannerReady,
         builder: (context, ready, child) {
+          final bannerAd = AdManager().bannerAd;
           return Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (ready) ...[
+              if (ready && bannerAd != null) ...[
                 SizedBox(
-                  width: AdManager().bannerAd!.size.width.toDouble(),
-                  height: AdManager().bannerAd!.size.height.toDouble(),
+                  width: bannerAd.size.width.toDouble(),
+                  height: bannerAd.size.height.toDouble(),
                   child: Container(
                     color: Colors.white,
-                    child: AdWidget(ad: AdManager().bannerAd!),
+                    child: AdWidget(ad: bannerAd),
                   ),
                 ),
                 Divider(height: 1, color: Colors.grey.shade200),
