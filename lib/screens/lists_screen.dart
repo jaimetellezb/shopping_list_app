@@ -4,7 +4,9 @@ import '../providers/shopping_provider.dart';
 import '../widgets/create_list_dialog.dart';
 
 class ListsScreen extends StatefulWidget {
-  const ListsScreen({super.key});
+  final VoidCallback? onOpenList;
+
+  const ListsScreen({super.key, this.onOpenList});
 
   @override
   _ListsScreenState createState() => _ListsScreenState();
@@ -90,7 +92,7 @@ class _ListsScreenState extends State<ListsScreen> {
                   borderRadius: BorderRadius.circular(16),
                   onTap: () {
                     provider.selectList(list);
-                    Navigator.of(context).pushNamed('/shopping');
+                    widget.onOpenList?.call();
                   },
                   child: Padding(
                     padding: const EdgeInsets.all(16),
