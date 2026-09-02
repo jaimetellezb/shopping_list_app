@@ -21,11 +21,17 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   String _appVersion = '';
 
-  final List<Widget> _screens = [
-    ListsScreen(),
-    ShoppingListScreen(),
-    HistoryScreen(),
+  late final List<Widget> _screens = [
+    ListsScreen(onOpenList: _openShopping),
+    const ShoppingListScreen(),
+    const HistoryScreen(),
   ];
+
+  void _openShopping() {
+    setState(() {
+      _currentIndex = 1;
+    });
+  }
 
   @override
   void initState() {
@@ -165,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      body: _screens[_currentIndex],
+      body: _buildBody(),
       floatingActionButton: _buildFab(),
       bottomNavigationBar: ValueListenableBuilder<bool>(
         valueListenable: AdManager().isBannerReady,
@@ -189,6 +195,46 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBody() {
+    return Consumer<ShoppingProvider>(
+      builder: (context, provider, _) {
+        if (provider.initFailed) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.error_outline_rounded,
+                    size: 48,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'No se pudieron cargar tus listas',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => provider.retryInit(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        if (!provider.isInitialized) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        return _screens[_currentIndex];
+      },
     );
   }
 

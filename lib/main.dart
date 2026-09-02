@@ -9,9 +9,7 @@ import 'db/shopping_item.dart';
 import 'db/shopping_list.dart';
 import 'providers/shopping_provider.dart';
 import 'screens/home_screen.dart';
-import 'screens/shopping_list_screen.dart';
 import 'screens/onboarding_screen.dart';
-import 'widgets/add_item_dialog.dart';
 import 'ads/ad_manager.dart';
 
 void main() async {
@@ -175,74 +173,6 @@ class MyApp extends StatelessWidget {
           '/': (context) => _StartupScreen(),
           '/home': (context) => const HomeScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
-          '/shopping': (context) => Scaffold(
-            backgroundColor: const Color(0xFFF5F7F5),
-            appBar: AppBar(
-              title: Consumer<ShoppingProvider>(
-                builder: (context, provider, _) => Text(
-                  provider.currentList?.name ?? 'Lista de compras',
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              actions: [
-                Consumer<ShoppingProvider>(
-                  builder: (context, provider, _) {
-                    if (provider.currentList == null) return Container();
-                    return IconButton(
-                      icon: const Icon(Icons.check_circle_outline),
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                            title: const Text('Completar Compra'),
-                            content: const Text(
-                              '¿Has terminado de hacer las compras? Esto moverá la lista al historial.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  provider.completeShoppingList();
-                                  Navigator.of(ctx).pop();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('¡Compra completada!'),
-                                      behavior: SnackBarBehavior.fixed,
-                                    ),
-                                  );
-                                },
-                                child: const Text(
-                                  'Completar',
-                                  style: TextStyle(color: Colors.green),
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      tooltip: 'Completar compra',
-                    );
-                  },
-                ),
-              ],
-            ),
-            body: ShoppingListScreen(),
-            floatingActionButton: Consumer<ShoppingProvider>(
-              builder: (context, provider, _) {
-                if (provider.currentList == null) return Container();
-                return FloatingActionButton(
-                  onPressed: () => showDialog(
-                    context: context,
-                    builder: (context) => AddItemDialog(),
-                  ),
-                  child: const Icon(Icons.add),
-                );
-              },
-            ),
-          ),
         },
       ),
     );
