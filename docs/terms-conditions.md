@@ -37,7 +37,7 @@ Consulta la [Política de Privacidad](./) para saber qué datos se tratan y cóm
 La Aplicación usa servicios de Google, que tienen sus propias condiciones:
 
 - **Google AdMob:** para mostrar anuncios.
-- **Firebase:** para reportes de fallos y analítica de uso.
+- **Firebase Crashlytics:** para reportes de fallos.
 
 ---
 
