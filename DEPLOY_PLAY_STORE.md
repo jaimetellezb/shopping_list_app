@@ -11,7 +11,7 @@
 | Bundle ID (iOS) | `com.jaimetellezb.shoppingList` |
 | App name | `La Compra` |
 | Versión | `1.0.0+1` |
-| Firebase | Analytics + Crashlytics configurados |
+| Firebase | Crashlytics configurado (sin Analytics) |
 | AdMob App ID | `ca-app-pub-9005550345701656~5464523781` |
 | Dominio autor | `com.jaimetellezb.*` |
 
@@ -231,12 +231,12 @@ static const String interstitialAdUnitId = 'ca-app-pub-[ID]/[INTERSTITIAL_ID]';
 
 ---
 
-## 5. Configurar Firebase (Analytics + Crashlytics)
+## 5. Configurar Firebase (Crashlytics)
 
 ### 5.1 Firebase ya incluido en el proyecto
 
 Este proyecto ya tiene:
-- `firebase_core`, `firebase_crashlytics`, `firebase_analytics` en `pubspec.yaml`
+- `firebase_core` y `firebase_crashlytics` en `pubspec.yaml`
 - Inicialización en `lib/main.dart` (con try-catch para desarrollo)
 - Crashlytics configurado para errores fatales y no fatales
 - Plugins de Gradle (`google-services` y `crashlytics`) en `android/settings.gradle.kts`
@@ -249,7 +249,7 @@ Este proyecto ya tiene:
 1. Ir a https://console.firebase.google.com
 2. "Create a project" (o usar uno existente)
 3. Nombre: "shopping-list-app" (o el que quieras)
-4. Google Analytics: habilitar
+4. Google Analytics: no habilitar (la app no lo usa)
 5. Registrar app Android con package name: com.jaimetellezb.shopping_list
 6. Descargar google-services.json → copiar a android/app/
 7. Registrar app iOS con bundle ID: com.jaimetellezb.shoppingList
@@ -487,7 +487,7 @@ java -jar bundletool.jar install-apks --apks=app.apks
 - [ ] Copiar a `ios/Runner/GoogleService-Info.plist`
 - [ ] Revisar que no esté en `.gitignore` (o agregarlo manualmente en CI)
 
-> Sin `GoogleService-Info.plist`, Firebase Crashlytics y Analytics NO funcionarán en iOS.
+> Sin `GoogleService-Info.plist`, Firebase Crashlytics NO funcionará en iOS.
 
 ### Legal y distribución
 - [ ] Precio definido (gratis o pago)

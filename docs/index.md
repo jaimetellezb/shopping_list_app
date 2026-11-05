@@ -26,13 +26,13 @@ La Aplicación utiliza **Google AdMob** para mostrar anuncios. Google puede reco
 
 Para más información, consulta la [Política de Privacidad de Google](https://policies.google.com/privacy).
 
-### 1.3 Datos recopilados automáticamente (Firebase)
-La Aplicación usa servicios de Firebase, de Google, que recopilan automáticamente:
+### 1.3 Datos recopilados automáticamente (reportes de fallos)
+La Aplicación usa **Firebase Crashlytics**, de Google. Cuando la Aplicación falla, recopila el rastro del error, el estado de la Aplicación y datos del dispositivo en ese momento, junto con un identificador de instalación.
 
-- **Firebase Crashlytics (reportes de fallos):** cuando la Aplicación falla, el rastro del error, el estado de la Aplicación y datos del dispositivo en ese momento, junto con un identificador de instalación.
-- **Google Analytics para Firebase (analítica de uso):** un identificador de la instancia de la Aplicación, el identificador de publicidad, una ubicación aproximada derivada de la dirección IP enmascarada y eventos como pantallas vistas y sesiones.
+La Aplicación no está diseñada para enviar el contenido de tus listas a este servicio.
 
-La Aplicación no está diseñada para enviar el contenido de tus listas a estos servicios.
+### 1.4 Versiones anteriores
+Las versiones anteriores a la 1.0.2 también incluían **Google Analytics para Firebase**, que recopilaba un identificador de la instancia de la Aplicación, el identificador de publicidad, una ubicación aproximada derivada de la dirección IP enmascarada y eventos como pantallas vistas y sesiones. Si usas una de esas versiones, actualiza la Aplicación para dejar de enviar esos datos.
 
 ---
 
@@ -43,15 +43,14 @@ La Aplicación no está diseñada para enviar el contenido de tus listas a estos
 | Listas de compras | Proveer la funcionalidad principal de la app | Necesario para el servicio |
 | ID de publicidad | Mostrar anuncios relevantes | Consentimiento del usuario |
 | Reportes de fallos | Detectar y corregir errores | Interés legítimo en mantener la app estable |
-| Identificadores, ubicación aproximada y eventos de uso | Medir el uso y mejorar la app | Interés legítimo en mejorar la app |
 
 ---
 
 ## 3. Almacenamiento y seguridad
 
 - Todos los datos de listas, productos y configuraciones se almacenan **localmente** en el dispositivo usando Hive.
-- No vendemos datos del usuario. Solo se transmiten a Google los datos necesarios para los anuncios (AdMob), los reportes de fallos y la analítica de uso (Firebase).
-- No tenemos servidores propios ni accedemos a tus listas. Podemos consultar los reportes de fallos y las estadísticas de uso en la consola de Firebase.
+- No vendemos datos del usuario. Solo se transmiten a Google los datos necesarios para los anuncios (AdMob) y los reportes de fallos (Firebase Crashlytics).
+- No tenemos servidores propios ni accedemos a tus listas. Podemos consultar los reportes de fallos en la consola de Firebase.
 
 ---
 
@@ -62,7 +61,6 @@ La Aplicación no está diseñada para enviar el contenido de tus listas a estos
 | Google AdMob | Publicidad | https://policies.google.com/privacy |
 | Google Mobile Ads SDK | SDK de anuncios | https://policies.google.com/privacy |
 | Firebase Crashlytics | Reportes de fallos | https://firebase.google.com/support/privacy |
-| Google Analytics para Firebase | Analítica de uso | https://policies.google.com/privacy |
 
 ---
 
