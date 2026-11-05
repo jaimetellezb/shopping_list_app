@@ -1,6 +1,6 @@
 # Política de Privacidad
 
-**Última actualización:** 25 de mayo de 2026
+**Última actualización:** 4 de noviembre de 2026
 
 ## Introducción
 
@@ -26,6 +26,14 @@ La Aplicación utiliza **Google AdMob** para mostrar anuncios. Google puede reco
 
 Para más información, consulta la [Política de Privacidad de Google](https://policies.google.com/privacy).
 
+### 1.3 Datos recopilados automáticamente (reportes de fallos)
+La Aplicación usa **Firebase Crashlytics**, de Google. Cuando la Aplicación falla, recopila el rastro del error, el estado de la Aplicación y datos del dispositivo en ese momento, junto con un identificador de instalación.
+
+La Aplicación no está diseñada para enviar el contenido de tus listas a este servicio.
+
+### 1.4 Versiones anteriores
+Las versiones anteriores a la 1.0.2 también incluían **Google Analytics para Firebase**, que recopilaba un identificador de la instancia de la Aplicación, el identificador de publicidad, una ubicación aproximada derivada de la dirección IP enmascarada y eventos como pantallas vistas y sesiones. Si usas una de esas versiones, actualiza la Aplicación para dejar de enviar esos datos.
+
 ---
 
 ## 2. Cómo usamos los datos
@@ -34,14 +42,15 @@ Para más información, consulta la [Política de Privacidad de Google](https://
 |---|---|---|
 | Listas de compras | Proveer la funcionalidad principal de la app | Necesario para el servicio |
 | ID de publicidad | Mostrar anuncios relevantes | Consentimiento del usuario |
+| Reportes de fallos | Detectar y corregir errores | Interés legítimo en mantener la app estable |
 
 ---
 
 ## 3. Almacenamiento y seguridad
 
 - Todos los datos de listas, productos y configuraciones se almacenan **localmente** en el dispositivo usando Hive.
-- No se transmiten, comparten ni venden datos del usuario a terceros (excepto los necesarios para anuncios mediante AdMob).
-- No tenemos servidores propios ni accedemos a los datos del usuario.
+- No vendemos datos del usuario. Solo se transmiten a Google los datos necesarios para los anuncios (AdMob) y los reportes de fallos (Firebase Crashlytics).
+- No tenemos servidores propios ni accedemos a tus listas. Podemos consultar los reportes de fallos en la consola de Firebase.
 
 ---
 
@@ -51,6 +60,7 @@ Para más información, consulta la [Política de Privacidad de Google](https://
 |---|---|---|
 | Google AdMob | Publicidad | https://policies.google.com/privacy |
 | Google Mobile Ads SDK | SDK de anuncios | https://policies.google.com/privacy |
+| Firebase Crashlytics | Reportes de fallos | https://firebase.google.com/support/privacy |
 
 ---
 
@@ -58,7 +68,7 @@ Para más información, consulta la [Política de Privacidad de Google](https://
 
 Puedes:
 
-- **Eliminar todos tus datos** desinstalando la Aplicación o borrando los datos de la app desde Ajustes del dispositivo.
+- **Eliminar tus listas y productos** desinstalando la Aplicación o borrando los datos de la app desde Ajustes del dispositivo. Esto no borra lo que Google ya haya recibido; para consultas sobre esos datos, escríbenos al correo de contacto.
 - **Restablecer tu ID de publicidad** desde Ajustes → Google → Anuncios.
 - **Optar por no recibir anuncios personalizados** desde Ajustes → Google → Anuncios → Desactivar personalización.
 
